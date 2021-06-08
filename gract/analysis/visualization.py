@@ -4,7 +4,7 @@ import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 
-def save_visual(g: nx.DiGraph, path: Path):
+def save_visualization(g: nx.DiGraph, path: Path):
     layout = nx.spring_layout(g, k=.1, iterations=100, threshold=1e-5)
     cmap = plt.cm.plasma
 

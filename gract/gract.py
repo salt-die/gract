@@ -1,28 +1,28 @@
 from random import choices
 
-from .scheduler import run_soon
+from .scheduler import run, run_soon, sleep
 
 
-# TODO: gracts shouldn't care if they're node-centric or edge-centric; current implementation is node-centric only.
+# TODO: Add options for starting topologies.
+# TODO: Keep track of number of node updates.
 class Gract:
-    __slots__ = 'nodes', '_running'
+    """A dynamic graph. Nodes asynchronously update their local neighborhoods.
+    """
+    __slots__ = 'nodes',
 
-    def __init__(self, node_type, neighbors_type, nnodes):
-        self._running = False
-        self.nodes = tuple( node_type(neighbors_type) for _ in range(nnodes) )
-
-    @property
-    def is_running(self):
-        return self._running
+    def __init__(self, node_type, nnodes):
+        # It would make sense to allow multiple node types as long as nodes had some common api to work with each other.
+        # An iterable of types and an iterable of nnodes will be the future.
+        self.nodes = tuple( node_type() for _ in range(nnodes) )
 
     @classmethod
-    def random_graph(cls, node_type, neighbors_type, degree, nnodes):
-        g = cls(node_type, neighbors_type, nnodes)
+    def random_graph(cls, node_type, nnodes, degree):
+        gract = cls(node_type, nnodes)
 
-        for node in g:
-            node.neighbors.extend(choices(g.nodes, k=degree))
+        for node in gract:
+            node.neighbors.update(choices(gract.nodes, k=degree))
 
-        return g
+        return gract
 
     @property
     def nx_adjlist(self):
@@ -33,10 +33,19 @@ class Gract:
     def __iter__(self):
         yield from self.nodes
 
-    def run(self):
-        if self._running:
-            raise RuntimeError('gract already running')
-
-        self._running = True
-
+    async def _main(self, npolls, delay):
+        """Coroutine passed to scheduler's `run`.
+        """
         run_soon(node.update_forever() for node in self)
+
+        adj_lists = [ ]
+        for _ in range(npolls):
+            await sleep(delay)
+            adj_lists.append(self.nx_adjlist)
+
+        return adj_lists
+
+    def run(self, npolls, delay):
+        """Run the gract. Adjacency list is added to a list every delay seconds npolls times.
+        """
+        return run(self._main(npolls, delay))

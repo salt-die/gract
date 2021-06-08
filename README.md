@@ -1,3 +1,3 @@
-# gract - asynchronous dynamic graphs from node / edge actors.
+# gract - asynchronous dynamic graphs
 
-In a gract (graph of actors), nodes / edges asynchronously update their local neighborhoods.
+In a gract (graph of actors), nodes asynchronously update their local neighborhoods.

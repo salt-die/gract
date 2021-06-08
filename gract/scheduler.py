@@ -12,12 +12,19 @@ from heapq import heappop, heappush
 from itertools import count
 from time import monotonic
 
+_EVENT_LOOP_STARTED = False
+_CURRENT_EVENT_LOOP = None
 
-class _NextTask:
+
+class _Yield:
+    """Primitive awaitable.
+    """
     __slots__ = ()
 
     def __await__(self):
         yield
+
+_YIELD = _Yield()
 
 
 class _Scheduler:
@@ -38,7 +45,7 @@ class _Scheduler:
             heappush(self.sleeping, (deadline, tiebreak, self.current))
 
         self.current = None
-        await _NextTask()
+        await _YIELD
 
     def run_soon(self, coros):
         """Schedule the given coroutine or coroutines to run immediately.
@@ -61,29 +68,27 @@ class _Scheduler:
             while sleeping and sleeping[0][0] <= monotonic():
                 ready.append(heappop(sleeping)[-1])
 
-            if ready:
-                self.current = ready.popleft()
-            else:
+            if not ready:
                 continue
+
+            self.current = ready.popleft()
 
             try:
                 self.current.send(None)
             except StopIteration as e:
                 return e.value
-            else:
-                if self.current is not None:
-                    ready.append(self.current)
+
+            if self.current is not None:
+                ready.append(self.current)
 
         _destroy_event_loop()
 
 
-EVENT_LOOP_STARTED = False
-CURRENT_EVENT_LOOP = None
-
 def _destroy_event_loop():
-    global EVENT_LOOP_STARTED, CURRENT_EVENT_LOOP
-    EVENT_LOOP_STARTED = False
-    CURRENT_EVENT_LOOP = None
+    global _EVENT_LOOP_STARTED, _CURRENT_EVENT_LOOP
+
+    _EVENT_LOOP_STARTED = False
+    _CURRENT_EVENT_LOOP = None
 
 ########################
 ### Public Functions ###
@@ -92,28 +97,29 @@ def _destroy_event_loop():
 def run_soon(coros):
     """Schedule the given coroutines to run immediately.
     """
-    global CURRENT_EVENT_LOOP
-    if CURRENT_EVENT_LOOP is None:
-        CURRENT_EVENT_LOOP = _Scheduler()
+    global _CURRENT_EVENT_LOOP
 
-    CURRENT_EVENT_LOOP.run_soon(coros)
+    if _CURRENT_EVENT_LOOP is None:
+        _CURRENT_EVENT_LOOP = _Scheduler()
+
+    _CURRENT_EVENT_LOOP.run_soon(coros)
 
 def run(coro):
     """Start the event loop.
     """
-    global EVENT_LOOP_STARTED, CURRENT_EVENT_LOOP
+    global _EVENT_LOOP_STARTED, _CURRENT_EVENT_LOOP
 
-    if EVENT_LOOP_STARTED:
+    if _EVENT_LOOP_STARTED:
         raise RuntimeError('an event loop is already running')
 
-    if CURRENT_EVENT_LOOP is None:
-        CURRENT_EVENT_LOOP = _Scheduler()
+    if _CURRENT_EVENT_LOOP is None:
+        _CURRENT_EVENT_LOOP = _Scheduler()
 
-    EVENT_LOOP_STARTED = True
-    return CURRENT_EVENT_LOOP.run(coro)
+    _EVENT_LOOP_STARTED = True
+    return _CURRENT_EVENT_LOOP.run(coro)
 
 async def sleep(delay):
-    if not EVENT_LOOP_STARTED:
+    if not _EVENT_LOOP_STARTED:
         raise RuntimeError('no running event loop')
 
-    await CURRENT_EVENT_LOOP.sleep(delay)
+    await _CURRENT_EVENT_LOOP.sleep(delay)
