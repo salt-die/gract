@@ -17,9 +17,6 @@ class RandomNeighbors(Neighbors):
     def __len__(self):
         return len(self._neighbors)
 
-    def __getitem__(self, i):
-        return self._neighbors[i]
-
     def pop(self):
         neighbors = self._neighbors
 
@@ -29,6 +26,9 @@ class RandomNeighbors(Neighbors):
         neighbors[i], neighbors[-1] = neighbors[-1], neighbors[i]
 
         return neighbors.pop()
+
+    def choose(self):
+        return choice(self._neighbors)
 
     def add(self, neighbor):
         self._neighbors.append(neighbor)
@@ -52,7 +52,7 @@ class HeadSpin(Node):
         old = neighbors.pop()
 
         # Last condition prevents all edge targets from converging to same node.
-        if not old.neighbors or (new := choice(old.neighbors)) is old:
+        if not old.neighbors or (new := old.neighbors.choose()) is old:
             old.neighbors.add( self )
         else:
             neighbors.add( new )
