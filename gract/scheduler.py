@@ -1,6 +1,13 @@
+"""
+Originally built on top of asyncio, but `gract` is currently experimenting with a much trimmer event loop.
+
+Warning
+-------
+No task-wrapping of coroutines and event-loop ends as soon as a coroutine raises StopIteration.
+
+"""
 from collections import deque
 from collections.abc import Iterable
-from functools import wraps
 from heapq import heappop, heappush
 from itertools import count
 from time import monotonic
@@ -14,12 +21,12 @@ class _NextTask:
 
 
 class _Scheduler:
-    __slots__ = 'ready', 'sleeping', 'tiebreak', 'current',
+    __slots__ = 'ready', 'sleeping', 'tiebreaker', 'current',
 
     def __init__(self):
         self.ready = deque()
         self.sleeping = [ ]
-        self.tiebreak = count()
+        self.tiebreaker = count()
         self.current = None
 
     async def sleep(self, delay):
@@ -27,14 +34,14 @@ class _Scheduler:
             self.ready.append(self.current)
         else:
             deadline = monotonic() + delay
-            tiebreak = next(self.tiebreak)
+            tiebreak = next(self.tiebreaker)
             heappush(self.sleeping, (deadline, tiebreak, self.current))
 
         self.current = None
         await _NextTask()
 
     def run_soon(self, coros):
-        """Schedule the given coroutines to run immediately.
+        """Schedule the given coroutine or coroutines to run immediately.
         """
         if isinstance(coros, Iterable):
             for coro in coros:
@@ -67,13 +74,13 @@ class _Scheduler:
                 if self.current is not None:
                     ready.append(self.current)
 
-        destroy_event_loop()
+        _destroy_event_loop()
 
 
 EVENT_LOOP_STARTED = False
 CURRENT_EVENT_LOOP = None
 
-def destroy_event_loop():
+def _destroy_event_loop():
     global EVENT_LOOP_STARTED, CURRENT_EVENT_LOOP
     EVENT_LOOP_STARTED = False
     CURRENT_EVENT_LOOP = None
@@ -110,6 +117,3 @@ async def sleep(delay):
         raise RuntimeError('no running event loop')
 
     await CURRENT_EVENT_LOOP.sleep(delay)
-
-def is_running():
-    return EVENT_LOOP_STARTED
