@@ -28,12 +28,15 @@ async def main(nnodes, degree, delay, n):
 # Run experiment
 graphs = run(main(nnodes=1000, degree=5, delay=10, n=3))
 
+# TODO: Move visualization functions and graph metric functions into their own module.
+# After a run, all the settings for the run should be saved into the directory as well, possibly in TAML.
+
 # Save graphs, histograms, and visualizations.
 root, histograms, visuals = get_paths()
 for i, graph in enumerate(graphs):
     with open(root / f'{i}.adjlist', 'w') as adjlist:
         adjlist.write(graph)
 
-    g = nx.read_adjlist(root / f'{i}.adjlist', create_using=nx.MultiDiGraph)
+    g = nx.read_adjlist(root / f'{i}.adjlist', create_using=nx.MultiDiGraph, nodetype=int)
     save_histogram(g, histograms / f'{i}.png')
     save_visual(g, visuals / f'{i}.png')

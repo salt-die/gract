@@ -20,7 +20,7 @@ class Neighbors(ABC):
 
     @abstractmethod
     def pop(self):
-        """Return a neighbor.
+        """Remove and return a neighbor.
         """
 
     @abstractmethod
@@ -37,6 +37,9 @@ class Neighbors(ABC):
         """Return some neighbor.
         """
 
+
+# TODO: Nodes (and eventually Edges) will probably need to be more specific about what methods `neighbors` needs to implement.
+#  Likely this will be added to some class attribute, e.g., `__neighbor_methods__`.
 class Node(ABC):
     __slots__ = 'id', 'neighbors',
 
@@ -53,7 +56,7 @@ class Node(ABC):
 
     @abstractmethod
     def update(self):
-        """Modify the local neighbor of the node.
+        """Modify the local neighborhood of the node.
         """
 
     async def update_forever(self):
