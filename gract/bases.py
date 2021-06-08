@@ -48,6 +48,9 @@ class Node(ABC):
         self.id = next(self.counter)
         self.neighbors = neighbors_type()
 
+    def __str__(self):
+        return str(self.id)
+
     @abstractmethod
     def update(self):
         """Modify the local neighbor of the node.
