@@ -4,7 +4,7 @@ from .scheduler import run, run_soon, sleep
 
 
 # TODO: Add options for starting topologies.
-# TODO: Keep track of number of node updates.
+# TODO: Keep track of number of node updates.  This along with `delay` parameter could be added as meta-data to adjacency-lists.
 class Gract:
     """A dynamic graph. Nodes asynchronously update their local neighborhoods.
     """
