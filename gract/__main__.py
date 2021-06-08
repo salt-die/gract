@@ -1,3 +1,9 @@
+"""
+Warning
+-------
+This is a rough-draft of a gract implementation.
+
+"""
 import networkx as nx
 
 from .gract import Gract
@@ -15,7 +21,7 @@ async def main(nnodes, degree, delay, n):
     adj_lists = [ ]
     for _ in range(n):
         await sleep(delay)
-        adj_lists.append(g.adjacency)
+        adj_lists.append(g.nx_adjlist)
 
     return adj_lists
 
