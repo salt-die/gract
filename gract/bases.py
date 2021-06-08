@@ -4,6 +4,9 @@ from itertools import count
 from .scheduler import sleep
 
 
+# DELETE?: How useful is this ABC? We can specify what methods we require of a collection of neighbors in Node/Edges instead.
+# We only need enough functionality to allow Node.update or Edge.update to not error.
+# Gract is currently using `extend` though to produce random graphs and __iter__ to produce adjacency lists.
 class Neighbors(ABC):
     """A collection of the neighbors of a Node or Edge.
     """
