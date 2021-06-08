@@ -15,7 +15,7 @@ class HeadSpin(Node):
         old = neighbors.pop()
 
         # Last condition prevents all edge targets from converging to same node.
-        if len(old.neighbors) <= len(neighbors) or (new := old.neighbors.choose()) is old:
+        if not old.neighbors or (new := old.neighbors.choose()) is old:
 
             # The edge from self to old is now an edge from old to self,
             # i.e., the edge reversed (a /spin/)...
