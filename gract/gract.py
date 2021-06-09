@@ -74,7 +74,7 @@ class Gract:
             self.poll()
 
     def run(self, npolls, delay):
-        """Run gract, polling every `delay` seconds `npolls` times.
+        """Run the gract, polling every `delay` seconds `npolls` times.
         """
         scheduler.run(self._run(npolls, delay))
 
