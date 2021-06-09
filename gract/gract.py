@@ -5,6 +5,8 @@ from random import choices
 from . import analysis
 from . import scheduler
 
+_POLL_ATTRS = 'nx_adjlist', 'activity',  # Attributes that are saved in results when a gract is polled.
+
 
 # TODO: Add options for starting topologies.
 class Gract:
@@ -19,13 +21,10 @@ class Gract:
     nnode: Union[int, Iterable[int]]
         Number of each type of node.
 
-    poll_delay: float
-        While running, seconds until graph is polled.
-
     """
-    __slots__ = 'nodes', 'results', 'poll_delay'
+    __slots__ = 'nodes', 'results',
 
-    def __init__(self, node_types, nnodes, poll_delay):
+    def __init__(self, node_types, nnodes):
         if isinstance(nnodes, int):
             self.nodes = tuple( node_types() for _ in range(nnodes) )
         else:
@@ -33,16 +32,18 @@ class Gract:
             self.nodes = tuple( chain.from_iterable(nodes) )
 
         self.results = [ ]
-        self.poll_delay = poll_delay
 
     @classmethod
-    def random_graph(cls, node_types, nnodes, poll_delay, degree):
-        gract = cls(node_types, nnodes, poll_delay)
+    def random_graph(cls, node_types, nnodes, degree):
+        gract = cls(node_types, nnodes)
 
         for node in gract:
             node.neighbors |= choices(gract.nodes, k=degree)
 
         return gract
+
+    def __iter__(self):
+        yield from self.nodes
 
     @property
     def nx_adjlist(self):
@@ -51,28 +52,30 @@ class Gract:
         return '\n'.join(f'{node} {" ".join(map(str, node.neighbors))}' for node in self)
 
     @property
-    def updates(self):
-        """The number of updates of each node in the graph.
+    def activity(self):
+        """The number of updates of each node.
         """
         total = sum(node.updates for node in self)
         individual_updates = '\n'.join(f'{node} {node.updates}' for node in self)
         return f'Total Updates: {total}\n{individual_updates}'
 
-    def __iter__(self):
-        yield from self.nodes
+    def poll(self):
+        """Add current adjacency list and various meta-data like node activity to results.
+        """
+        self.results.append(tuple(getattr(self, attr) for attr in _POLL_ATTRS))
 
-    async def _run(self, npolls):
+    async def _run(self, npolls, delay):
         """Coroutine passed to scheduler's `run`.
         """
         scheduler.run_soon(node.update_forever() for node in self)
 
         for _ in range(npolls):
-            await scheduler.sleep(self.poll_delay)
-            self.results.append((self.nx_adjlist, self.updates))
+            await scheduler.sleep(delay)
+            self.poll()
 
-    def run(self, npolls):
-        """Run until n polls completed.
+    def run(self, npolls, delay):
+        """Run gract, polling every `delay` seconds `npolls` times.
         """
-        scheduler.run(self._run(npolls))
+        scheduler.run(self._run(npolls, delay))
 
     save = analysis.save
