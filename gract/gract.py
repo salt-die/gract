@@ -5,8 +5,6 @@ from random import choices
 from . import analysis
 from . import scheduler
 
-_POLL_ATTRS = 'nx_adjlist', 'activity',  # Attributes that are saved in results when a gract is polled.
-
 
 # TODO: Add options for starting topologies.
 class Gract:
@@ -47,22 +45,28 @@ class Gract:
 
     @property
     def nx_adjlist(self):
-        """The current adjacency list of the graph in a string format readable by networkx.
+        """The current adjacency list of the graph in a string format readable by networkx (and also by humans).
         """
         return '\n'.join(f'{node} {" ".join(map(str, node.neighbors))}' for node in self)
 
     @property
     def activity(self):
-        """The number of updates of each node.
+        """The activity each node in a human-readable string format.
         """
-        total = sum(node.updates for node in self)
-        individual_updates = '\n'.join(f'{node} {node.updates}' for node in self)
-        return f'Total Updates: {total}\n{individual_updates}'
+        total = sum(node.activity for node in self)
+        individual = '\n'.join(f'{node} {node.activity}' for node in self)
+        return f'Total Activity: {total}\n{individual}'
+
+    @property
+    def metadata(self):
+        """Meta-data of each node in a human-readable string format.
+        """
+        return '\n'.join(f'{node} {node.metadata}' for node in self)
 
     def poll(self):
-        """Add current adjacency list and various meta-data like node activity to results.
+        """Add current adjacency list, activity, and node meta-data to results.
         """
-        self.results.append(tuple(getattr(self, attr) for attr in _POLL_ATTRS))
+        self.results.append((self.nx_adjlist, self.activity, self.metadata))
 
     async def _run(self, npolls, delay):
         """Coroutine passed to scheduler's `run`.
