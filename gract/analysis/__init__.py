@@ -14,6 +14,7 @@ def save(gract, **kwargs):
     """
     Save polled adajacency lists of a gract.
 
+
     Optional Parameters
     -------------------
     activity: bool

@@ -11,6 +11,7 @@ class Gract:
     """
     A dynamic graph. Nodes asynchronously update their local neighborhoods.
 
+
     Parameters
     ----------
     node_types: Union[Node, Iterable[Node]]
