@@ -75,7 +75,7 @@ class _Scheduler:
 
             try:
                 self.current.send(None)
-            except StopIteration as e:
+            except StopIteration:
                 break
 
             if self.current is not None:
