@@ -26,7 +26,7 @@ class Node(ABC):
     Node implementations require a `neighbors_cls` kwarg in the class definition.
 
     """
-    __slots__ = 'id', 'neighbors', 'activity'
+    __slots__ = 'id', 'neighbors', 'activity',
 
     _nnodes = count()
 
