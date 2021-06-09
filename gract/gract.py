@@ -1,26 +1,46 @@
+from collections.abc import Iterable
+from itertools import chain
 from random import choices
 
-from .scheduler import run, run_soon, sleep
+from . import analysis
+from . import scheduler
 
 
 # TODO: Add options for starting topologies.
-# TODO: Keep track of number of node updates.  This along with `delay` parameter could be added as meta-data to adjacency-lists.
 class Gract:
-    """A dynamic graph. Nodes asynchronously update their local neighborhoods.
     """
-    __slots__ = 'nodes',
+    A dynamic graph. Nodes asynchronously update their local neighborhoods.
 
-    def __init__(self, node_type, nnodes):
-        # It would make sense to allow multiple node types as long as nodes had some common api to work with each other.
-        # An iterable of types and an iterable of nnodes will be the future.
-        self.nodes = tuple( node_type() for _ in range(nnodes) )
+    Parameters
+    ----------
+    node_types: Union[Node, Iterable[Node]]
+        Types of nodes.
+
+    nnode: Union[int, Iterable[int]]
+        Number of each type of node.
+
+    poll_delay: float
+        While running, seconds until graph is polled.
+
+    """
+    __slots__ = 'nodes', 'results', 'poll_delay'
+
+    def __init__(self, node_types, nnodes, poll_delay):
+        if isinstance(nnodes, int):
+            self.nodes = tuple( node_types() for _ in range(nnodes) )
+        else:
+            nodes = ((node_type() for _ in range(n)) for node_type, n in zip(node_types, nnodes))
+            self.nodes = tuple( chain.from_iterable(nodes) )
+
+        self.results = [ ]
+        self.poll_delay = poll_delay
 
     @classmethod
-    def random_graph(cls, node_type, nnodes, degree):
-        gract = cls(node_type, nnodes)
+    def random_graph(cls, node_types, nnodes, poll_delay, degree):
+        gract = cls(node_types, nnodes, poll_delay)
 
         for node in gract:
-            node.neighbors.update(choices(gract.nodes, k=degree))
+            node.neighbors |= choices(gract.nodes, k=degree)
 
         return gract
 
@@ -28,24 +48,31 @@ class Gract:
     def nx_adjlist(self):
         """The current adjacency list of the graph in a string format readable by networkx.
         """
-        return '\n'.join(f'{node.id} {" ".join(map(str, node.neighbors))}' for node in self)
+        return '\n'.join(f'{node} {" ".join(map(str, node.neighbors))}' for node in self)
+
+    @property
+    def updates(self):
+        """The number of updates of each node in the graph.
+        """
+        total = sum(node.updates for node in self)
+        individual_updates = '\n'.join(f'{node} {node.updates}' for node in self)
+        return f'Total Updates: {total}\n{individual_updates}'
 
     def __iter__(self):
         yield from self.nodes
 
-    async def _main(self, npolls, delay):
+    async def _run(self, npolls):
         """Coroutine passed to scheduler's `run`.
         """
-        run_soon(node.update_forever() for node in self)
+        scheduler.run_soon(node.update_forever() for node in self)
 
-        adj_lists = [ ]
         for _ in range(npolls):
-            await sleep(delay)
-            adj_lists.append(self.nx_adjlist)
+            await scheduler.sleep(self.poll_delay)
+            self.results.append((self.nx_adjlist, self.updates))
 
-        return adj_lists
-
-    def run(self, npolls, delay):
-        """Run the gract. Adjacency list is added to a list every delay seconds npolls times.
+    def run(self, npolls):
+        """Run until n polls completed.
         """
-        return run(self._main(npolls, delay))
+        scheduler.run(self._run(npolls))
+
+    save = analysis.save

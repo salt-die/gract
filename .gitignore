@@ -1,4 +1,4 @@
 __pycache__/
 
-# Visualizations and adjacency lists of gract runs.
-results/
+# Experiment results.
+results/*/

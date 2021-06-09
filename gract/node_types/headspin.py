@@ -1,21 +1,24 @@
 from random import randrange, choice
 
-from ..bases import Neighbors, Node
+from .bases import NeighborSet, Node
 
 
-class RandomNeighbors(Neighbors):
+class RandomNeighbors(NeighborSet):
     """A collection of neighbors where `pop` and `choose` select a random neighbor.
     """
     __slots__ = '_neighbors',
 
-    def __init__(self):
-        self._neighbors = [ ]
+    def __init__(self, neighbors=()):
+        self._neighbors = list(neighbors)
 
     def __iter__(self):
         yield from self._neighbors
 
     def __len__(self):
         return len(self._neighbors)
+
+    def __contains__(self, neighbor):
+        return neighbor in self._neighbors
 
     def pop(self):
         neighbors = self._neighbors
@@ -33,15 +36,19 @@ class RandomNeighbors(Neighbors):
     def add(self, neighbor):
         self._neighbors.append(neighbor)
 
+    def discard(self, neighbor):
+        try:
+            self._neighbors.remove(neighbor)
+        except ValueError:
+            pass
 
-class HeadSpin(Node):
+
+class HeadSpin(Node, neighbors_cls=RandomNeighbors):
     """
     An edge with a source at this node will have its target updated to an adjacent
     node (head-move) or reverse (spin).
     """
     __slots__ = ()
-
-    neighbors_type = RandomNeighbors
 
     def update(self):
         neighbors = self.neighbors
@@ -56,3 +63,5 @@ class HeadSpin(Node):
             old.neighbors.add( self )
         else:
             neighbors.add( new )
+
+        self.updates += 1

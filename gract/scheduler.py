@@ -76,7 +76,7 @@ class _Scheduler:
             try:
                 self.current.send(None)
             except StopIteration as e:
-                return e.value
+                break
 
             if self.current is not None:
                 ready.append(self.current)
@@ -116,7 +116,7 @@ def run(coro):
         _CURRENT_EVENT_LOOP = _Scheduler()
 
     _EVENT_LOOP_STARTED = True
-    return _CURRENT_EVENT_LOOP.run(coro)
+    _CURRENT_EVENT_LOOP.run(coro)
 
 async def sleep(delay):
     if not _EVENT_LOOP_STARTED:
