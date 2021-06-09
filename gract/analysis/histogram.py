@@ -1,9 +1,9 @@
 from itertools import chain
 from pathlib import Path
 
-import networkx as nx
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import networkx as nx
 
 def save_histogram(g: nx.DiGraph, path: Path):
     out_degrees = [ d for _, d in g.out_degree() ]
