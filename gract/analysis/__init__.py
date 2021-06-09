@@ -23,12 +23,12 @@ def save(gract, *, histograms=True, visualizations=True):
     if visualizations:
         visualization_path.mkdir()
 
-    for i, (adjlist, updates) in enumerate(gract.results):
+    for i, (adjlist, activity) in enumerate(gract.results):
         adjlist_path = root / f'{i}.adjlist'
         adjlist_path.write_text(adjlist)
 
-        updates_path = root / f'{i}.activity'
-        updates_path.write_text(updates)
+        activity_path = root / f'{i}.activity'
+        activity_path.write_text(activity)
 
         if histograms or visualizations:
             g = nx.read_adjlist(adjlist_path, create_using=nx.MultiDiGraph, nodetype=int)
