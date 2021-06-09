@@ -64,4 +64,4 @@ class HeadSpin(Node, neighbors_cls=RandomNeighbors):
         else:
             neighbors.add( new )
 
-        self.updates += 1
+        self.activity += 1
