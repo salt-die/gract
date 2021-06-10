@@ -78,9 +78,10 @@ class Gract:
             await scheduler.sleep(delay)
             self.poll()
 
-    def run(self, npolls, delay):
-        """Run the gract, polling every `delay` seconds `npolls` times.
+    def run(self, duration, npolls):
+        """Run the gract for `duration` seconds, polling `npolls` times.
         """
-        scheduler.run(self._run(npolls, delay))
+        npolls = max(1, npolls)
+        scheduler.run(self._run(npolls, duration / npolls))
 
     save = analysis.save
