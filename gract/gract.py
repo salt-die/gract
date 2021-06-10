@@ -70,27 +70,26 @@ class Gract:
         """
         self.results.append((self.nx_adjlist, self.activity, self.metadata))
 
-    async def _run(self, npolls, delay, progress_bar=None):
+    async def _run(self, npolls, duration):
         """Coroutine passed to scheduler's `run`.
         """
-        if progress_bar:
-            scheduler.run_soon(progress_bar)
-
         scheduler.run_soon(node.update_forever() for node in self)
 
-        for _ in range(npolls):
-            await scheduler.sleep(delay)
-            self.poll()
+        with progress_bar(duration):
+            if npolls > 0:
+                poll_interval = duration / npolls
 
-        if progress_bar:
-            print()
+                for _ in range(npolls):
+                    await scheduler.sleep(poll_interval)
+                    self.poll()
+            else:
+                await scheduler.sleep(duration)
 
         scheduler.stop()
 
-    def run(self, duration, npolls, show_progress=True):
+    def run(self, duration, npolls):
         """Run the gract for `duration` seconds, polling `npolls` times.
         """
-        npolls = max(1, npolls)
-        scheduler.run(self._run(npolls, duration / npolls, show_progress and progress_bar(duration)))
+        scheduler.run(self._run(npolls, duration))
 
     save = analysis.save
