@@ -1,4 +1,4 @@
-from random import randrange, choice
+from random import random
 
 from .bases import NeighborSet, Node
 
@@ -23,7 +23,7 @@ class RandomNeighbors(NeighborSet):
     def pop(self):
         neighbors = self._neighbors
 
-        i = randrange(len(neighbors))
+        i = int(random() * len(neighbors))
 
         # We efficiently remove from the list by swapping the random neighbor with the last neighbor then popping.
         neighbors[i], neighbors[-1] = neighbors[-1], neighbors[i]
@@ -31,7 +31,9 @@ class RandomNeighbors(NeighborSet):
         return neighbors.pop()
 
     def choose(self):
-        return choice(self._neighbors)
+        neighbors = self._neighbors
+        i = int(random() * len(neighbors))
+        return neighbors[i]
 
     def add(self, neighbor):
         self._neighbors.append(neighbor)
