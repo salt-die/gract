@@ -1,9 +1,9 @@
 """
-Originally built on top of asyncio, but `gract` is currently experimenting with a much trimmer event loop.
+Originally built on top of asyncio, but `gract` is currently experimenting with a much trimmer (and faster) event loop.
+To this end, coroutines are not wrapped in Tasks.  When a coroutine is finished running it is discarded along with any
+return value(s) it may have had.
 
-Warning
--------
-No task-wrapping of coroutines and event-loop ends as soon as a coroutine raises StopIteration.
+`stop` can be used to end the current event loop before all coroutines finish.
 
 """
 from collections import deque
@@ -74,12 +74,19 @@ class _Scheduler:
             try:
                 self.current.send(None)
             except StopIteration:
-                break
+                pass
 
             if self.current is not None:
                 ready.append(self.current)
 
         _destroy_event_loop()
+
+    def stop(self):
+        """Discard all coroutines, ending the event loop.
+        """
+        self.current = None
+        self.ready.clear()
+        self.sleeping.clear()
 
 
 def _destroy_event_loop():
@@ -116,3 +123,11 @@ async def sleep(delay):
         raise RuntimeError('no running event loop')
 
     await _CURRENT_EVENT_LOOP.sleep(delay)
+
+def stop():
+    """Stop current event loop.
+    """
+    if _CURRENT_EVENT_LOOP is None:
+        raise RuntimeError('no running event loop')
+
+    _CURRENT_EVENT_LOOP.stop()
