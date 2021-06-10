@@ -4,6 +4,7 @@ from random import choices
 
 from . import analysis
 from . import scheduler
+from .progress_bar import progress_bar
 
 
 # TODO: Add options for starting topologies.
@@ -69,19 +70,27 @@ class Gract:
         """
         self.results.append((self.nx_adjlist, self.activity, self.metadata))
 
-    async def _run(self, npolls, delay):
+    async def _run(self, npolls, delay, progress_bar=None):
         """Coroutine passed to scheduler's `run`.
         """
+        if progress_bar:
+            scheduler.run_soon(progress_bar)
+
         scheduler.run_soon(node.update_forever() for node in self)
 
         for _ in range(npolls):
             await scheduler.sleep(delay)
             self.poll()
 
-    def run(self, duration, npolls):
+        if progress_bar:
+            print()
+
+        scheduler.stop()
+
+    def run(self, duration, npolls, show_progress=True):
         """Run the gract for `duration` seconds, polling `npolls` times.
         """
         npolls = max(1, npolls)
-        scheduler.run(self._run(npolls, duration / npolls))
+        scheduler.run(self._run(npolls, duration / npolls, show_progress and progress_bar(duration)))
 
     save = analysis.save
