@@ -6,6 +6,7 @@ from .scheduler import run_soon, sleep
 UPDATE_INTERVAL = .1
 BAR_LENGTH = 75
 SPINNER = cycle("___-`''´-___")
+FILL = '█'
 PARTIAL_FILL = ' ▏▎▍▌▋▊▉█'
 
 async def _progress_bar(duration):
@@ -19,26 +20,36 @@ async def _progress_bar(duration):
         Total duration of progress bar.
 
     """
-    start_time = monotonic()
+    start_time = current_time = monotonic()
     end_time = start_time + duration
 
-    while (current_time := monotonic()) < end_time:
-        elapsed_time = current_time - start_time
-        percent = elapsed_time / duration
+    while current_time < end_time:
+        current_time = monotonic()
 
-        filled_length = BAR_LENGTH * percent
-        partial_fill = PARTIAL_FILL[int((filled_length % 1) * 9)]
-        flip = next(SPINNER) if max(0, BAR_LENGTH - filled_length - 1) else ''
+        if end_time - current_time < UPDATE_INTERVAL:
+            current_time = end_time
+            elapsed_time = duration
+            percent = 1
+        else:
+            elapsed_time = current_time - start_time
+            percent = elapsed_time / duration
 
-        bar = f'{"█" * int(filled_length)}{partial_fill}{flip}'.ljust(BAR_LENGTH, '_')
+        fill, partial = divmod(BAR_LENGTH * percent, 1)
+        filled_length, partial_index = int(fill), int(len(PARTIAL_FILL) * partial)
 
-        progress = ' | '.join((
-            bar,
-            f'Completed: {percent * 100:>5.1f}%',
-            f'Time Elapsed: {elapsed_time:>5.1f}s',
-            f'Time Left: {duration - elapsed_time:>5.1f}s',
-        ))
-        print(progress, end='\r')
+        partial_fill = PARTIAL_FILL[partial_index]
+
+        bar = f'{FILL * filled_length}{partial_fill}{next(SPINNER)}'.ljust(BAR_LENGTH, '_')[:BAR_LENGTH]
+
+        print(
+            ' | '.join((
+                bar,
+                f'Completed: {100 * percent:>5.1f}%',
+                f'Time Elapsed: {elapsed_time:>5.1f}s',
+                f'Time Left: {duration - elapsed_time:>5.1f}s',
+            )),
+            end='\r'
+        )
 
         await sleep(UPDATE_INTERVAL)
 
@@ -46,8 +57,9 @@ async def _progress_bar(duration):
 def progress_bar(duration):
     """Progress bar context manager. Schedule progress bar on enter and clean up stdout on exit.
     """
+    run_soon(_progress_bar(duration))
+
     try:
-        run_soon(_progress_bar(duration))
         yield
     finally:
         print()
