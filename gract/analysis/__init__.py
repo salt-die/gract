@@ -6,6 +6,7 @@ import networkx as nx  # MAYBE: Defer this import until needed.
 from .histogram import save_histogram
 from .visualization import save_visualization
 
+ROOT = Path(__file__).parent.parent.parent
 RESULTS = 'results'
 HISTOGRAMS = 'histograms'
 VISUALS = 'visuals'
@@ -30,11 +31,11 @@ def save(gract, **kwargs):
         Save graph visualizations if true. (default: False)
 
     """
-    root = Path() / RESULTS / strftime('%m_%d_%y__%H_%M_%S')
-    root.mkdir()
+    results = ROOT / RESULTS / strftime('%m_%d_%y__%H_%M_%S')
+    results.mkdir()
 
-    histogram_path = root / HISTOGRAMS
-    visualization_path = root / VISUALS
+    histogram_path = results / HISTOGRAMS
+    visualization_path = results / VISUALS
 
     if histograms := kwargs.get('histograms'):
         histogram_path.mkdir()
@@ -43,16 +44,16 @@ def save(gract, **kwargs):
         visualization_path.mkdir()
 
     for i, (adjlist, activity, meta_data) in enumerate(gract.results):
-        adjlist_path = root / f'{i}.adjlist'
+        adjlist_path = results / f'{i}.adjlist'
         adjlist_path.write_text(adjlist)
 
         if kwargs.get('activity'):
-            activity_path = root / f'{i}.activity'
+            activity_path = results / f'{i}.activity'
             activity_path.write_text(activity)
 
         if kwargs.get('metadata'):
-            meta_data_path = root / f'{i}.metadata'
-            meta_data_path.write_text(meta_data)
+            metadata_path = results / f'{i}.metadata'
+            metadata_path.write_text(meta_data)
 
         if histograms or visualizations:
             g = nx.read_adjlist(adjlist_path, create_using=nx.MultiDiGraph, nodetype=int)
