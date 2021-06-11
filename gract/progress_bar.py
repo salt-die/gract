@@ -10,17 +10,9 @@ FILL = '█'
 PARTIAL_FILL = ' ▏▎▍▌▋▊▉█'
 
 async def _progress_bar(duration):
+    """An asynchronous progress bar that tracks time for `duration` seconds.
     """
-    A time-based asynchronous progress bar.
-
-
-    Parameters
-    ----------
-    duration: float
-        Total duration of progress bar.
-
-    """
-    bar_length = os.get_terminal_size()[0] - 58  # 58 is length of non-bar characters printed.
+    bar_length = min(75, os.get_terminal_size()[0] - 58)  # 58 is length of non-bar characters printed.
 
     start_time = current_time = monotonic()
     end_time = start_time + duration
@@ -56,14 +48,12 @@ async def _progress_bar(duration):
 
 @contextmanager
 def progress_bar(duration):
-    """
-    Progress bar context manager. Schedule progress bar and hide cursor on enter.
-    Show cursor and print newline on exit.
+    """Progress bar context manager.
     """
     run_soon(_progress_bar(duration))
+    print('\x1b[?25l', end='') # Hide cursor
 
     try:
-        print('\x1b[?25l', end='') # Hide cursor
         yield
     finally:
-        print('\x1b[?25h') # Show cursor
+        print('\x1b[?25h') # Show cursor and print newline.
