@@ -61,12 +61,12 @@ class Gract:
 
     @property
     def metadata(self):
-        """Meta-data of each node in a human-readable string format.
+        """Metadata of each node in a human-readable string format.
         """
         return '\n'.join(f'{node} {node.metadata}' for node in self)
 
     def poll(self):
-        """Add current adjacency list, activity, and node meta-data to results.
+        """Add current adjacency list, activity, and node metadata to results.
         """
         self.results.append((self.nx_adjlist, self.activity, self.metadata))
 

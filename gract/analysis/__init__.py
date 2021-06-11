@@ -21,7 +21,7 @@ def save(gract, **kwargs):
         Save node activity if true. (default: False)
 
     metadata: bool
-        Save node meta-data if true. (default: False)
+        Save node metadata if true. (default: False)
 
     histograms: bool
         Save degree histograms if true. (default: False)
