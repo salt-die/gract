@@ -1,10 +1,10 @@
 from contextlib import contextmanager
 from itertools import cycle
+import os
 from time import monotonic
 from .scheduler import run_soon, sleep
 
 UPDATE_INTERVAL = .1
-BAR_LENGTH = 75
 SPINNER = cycle("___-`''´-___")
 FILL = '█'
 PARTIAL_FILL = ' ▏▎▍▌▋▊▉█'
@@ -20,6 +20,8 @@ async def _progress_bar(duration):
         Total duration of progress bar.
 
     """
+    bar_length = os.get_terminal_size()[0] - 58  # 58 is length of non-bar characters printed.
+
     start_time = current_time = monotonic()
     end_time = start_time + duration
 
@@ -34,19 +36,18 @@ async def _progress_bar(duration):
             elapsed_time = current_time - start_time
             percent = elapsed_time / duration
 
-        fill, partial = divmod(BAR_LENGTH * percent, 1)
+        fill, partial = divmod(bar_length * percent, 1)
         filled_length, partial_index = int(fill), int(len(PARTIAL_FILL) * partial)
 
         partial_fill = PARTIAL_FILL[partial_index]
 
-        bar = f'{FILL * filled_length}{partial_fill}{next(SPINNER)}'.ljust(BAR_LENGTH, '_')[:BAR_LENGTH]
+        bar = f'{FILL * filled_length}{partial_fill}{next(SPINNER)}'.ljust(bar_length, '_')[:bar_length]
 
         print(
             ' | '.join((
-                bar,
-                f'Completed: {100 * percent:>5.1f}%',
+                f'[{bar}] {100 * percent:>5.1f}%',
                 f'Time Elapsed: {elapsed_time:>5.1f}s',
-                f'Time Left: {duration - elapsed_time:>5.1f}s',
+                f'Time Remaining: {duration - elapsed_time:>5.1f}s',
             )),
             end='\r'
         )
@@ -55,11 +56,14 @@ async def _progress_bar(duration):
 
 @contextmanager
 def progress_bar(duration):
-    """Progress bar context manager. Schedule progress bar on enter and clean up stdout on exit.
+    """
+    Progress bar context manager. Schedule progress bar and hide cursor on enter.
+    Show cursor and print newline on exit.
     """
     run_soon(_progress_bar(duration))
 
     try:
+        print('\x1b[?25l', end='') # Hide cursor
         yield
     finally:
-        print()
+        print('\x1b[?25h') # Show cursor
