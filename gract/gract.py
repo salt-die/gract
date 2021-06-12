@@ -15,10 +15,10 @@ class Gract:
 
     Parameters
     ----------
-    node_types: Union[Node, Iterable[Node]]
+    node_types: Node | Iterable[Node]
         Types of nodes.
 
-    nnode: Union[int, Iterable[int]]
+    nnode: int | Iterable[int]
         Number of each type of node.
 
     """
