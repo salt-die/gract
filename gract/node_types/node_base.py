@@ -1,20 +1,8 @@
 from abc import ABC, abstractmethod
-from collections.abc import MutableSet
 from itertools import count
 
+from .neighbor_base import NeighborSet
 from ..scheduler import sleep
-
-
-class NeighborSet(MutableSet):
-    __slots__ = ()
-
-    def __init__(self, neighbors=()):
-        self |= neighbors
-
-    @abstractmethod
-    def choose(self):
-        """Return a single neighbor, if one exists.
-        """
 
 
 class Node(ABC):
@@ -48,6 +36,10 @@ class Node(ABC):
 
     def __str__(self):
         return str(self.id)
+
+    @property
+    def degree(self):
+        return len(self.neighbors)
 
     @property
     def metadata(self):
