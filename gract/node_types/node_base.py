@@ -48,7 +48,7 @@ class Node(ABC):
         return f'type: {type(self).__name__}'
 
     @abstractmethod
-    def update(self):
+    async def update(self):
         """
         Modify the local neighborhood of the node.
 
@@ -62,5 +62,5 @@ class Node(ABC):
         """Asynchronously update local neighborhood forever.
         """
         while True:
-            self.update()
+            await self.update()
             await sleep(0)

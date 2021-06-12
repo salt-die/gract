@@ -9,7 +9,7 @@ class HeadSpinNode(Node, neighbors_cls=RandomNeighbors):
     """
     __slots__ = ()
 
-    def update(self):
+    async def update(self):
         neighbors = self.neighbors
 
         if not neighbors:
