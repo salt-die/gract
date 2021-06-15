@@ -3,7 +3,7 @@ from pathlib import Path
 
 import networkx as nx  # MAYBE: Defer this import until needed.
 
-from .histogram import save_histogram
+from .histogram import save_histogram, display_histogram
 from .visualization import save_visualization
 
 ROOT = Path(__file__).parent.parent.parent
@@ -19,16 +19,16 @@ def save(gract, **kwargs):
     Optional Parameters
     -------------------
     activity: bool
-        Save node activity if true. (default: False)
+        Save node activity. (default: False)
 
     metadata: bool
-        Save node metadata if true. (default: False)
+        Save node metadata. (default: False)
 
     histograms: bool
-        Save degree histograms if true. (default: False)
+        Save degree histograms. (default: False)
 
     visualizations: bool
-        Save graph visualizations if true. (default: False)
+        Save graph visualizations. (default: False)
 
     """
     results = ROOT / RESULTS / strftime('%m_%d_%y__%H_%M_%S')
