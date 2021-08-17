@@ -5,14 +5,6 @@ import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 
-UP = '\x1b[{}A'
-
-def cursor_up(n):
-    print(UP.format(n), end='\r')
-
-def display_histogram(gract, height, width):
-    ...
-
 def save_histogram(g: nx.DiGraph, path: Path):
     out_degrees = [ d for _, d in g.out_degree() ]
     in_degrees = [ d for _, d in g.in_degree() ]
